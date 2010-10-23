@@ -88,7 +88,7 @@ func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 	ping := make(chan bool)	
 
 	//run supervisor loop
-	go sup.Loop(ping) //TODO(jwall): this appears to still block?
+	go sup.Loop(ping)
 	return ping, true
 }
 
