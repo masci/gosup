@@ -1,7 +1,9 @@
 package supervisor
 
+import "log"
+
 type Supervisor struct {
-	serviceSpec map [string] Service
+	serviceSpec map [string] ServiceSpec
 }
 
 type Service interface {
@@ -14,17 +16,23 @@ type Service interface {
 type Policy int
 
 const (
-	ALWAYS = iota
+	ALWAYS = iota // 0 value and therefore the default for restart policies
 	NEVER
 )
 
 type ServiceSpec struct {
 	service Service
 	restartPolicy Policy
+	ping chan bool
 }
 
-func (sup Supervisor) RegisterService(name string, s Service) {
-	sup.serviceSpec[name] = s
+func (sup Supervisor) RegisterService(name string, s ServiceSpec) {
+	if !(s.service == nil) {
+		sup.serviceSpec[name] = s
+	} else {
+		log.Panicf("No Service is service spec: %s", s)
+	}
+	
 }
 
 func (sup Supervisor) UnregisterService(name string) bool {
@@ -32,28 +40,29 @@ func (sup Supervisor) UnregisterService(name string) bool {
 	if _, exists := sup.serviceSpec[name]; !exists {
 		return false // return false if it didn't
 	}
-	sup.serviceSpec[name] = nil, false // delete the key
+	sup.serviceSpec[name] = ServiceSpec{}, false // delete the key
 	return true
 }
 
 func (sup Supervisor) Start() bool {
-	return sup.doForServices(func(s Service) bool {
-	        _, result := s.Start() // TODO(jwall): store the channel
+	return sup.doForServices(func(s *ServiceSpec) bool {
+	        ch, result := s.service.Start()
+		s.ping = ch
 		return result
 	}) 
 }
 
 func (sup Supervisor) Stop() bool {
-	return sup.doForServices(func(s Service) bool {
-		s.Stop()
+	return sup.doForServices(func(s *ServiceSpec) bool {
+		s.service.Stop()
 		return true
 	}) 
 }
 
-func (sup Supervisor) doForServices(f func (s Service) bool) bool {
+func (sup Supervisor) doForServices(f func (s *ServiceSpec) bool) bool {
 	result := true
 	for _, s := range sup.serviceSpec {
-		result = result && f(s)
+		result = result && f(&s)
 	}
 	return result
 }
