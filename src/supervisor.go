@@ -4,6 +4,7 @@ import "log"
 
 type Supervisor struct {
 	serviceSpec map [string] *ServiceSpec
+	stopSign bool
 }
 
 type Service interface {
@@ -96,11 +97,15 @@ func (sup *Supervisor) Loop(ch chan bool) {
 			sup.Stop()
 			break
 		}
+		if sup.stopSign {
+			break // time to stop
+		}
 	}
 	close(ch)
 }
 
 func (sup *Supervisor) Stop() bool {
+	sup.stopSign = true
 	return sup.doForServices(func(s *ServiceSpec) bool {
 		s.service.Stop()
 		return true
