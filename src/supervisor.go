@@ -26,7 +26,7 @@ type ServiceSpec struct {
 	ping chan bool
 }
 
-func (sup Supervisor) RegisterService(name string, s *ServiceSpec) {
+func (sup *Supervisor) RegisterService(name string, s *ServiceSpec) {
 	if !(s.service == nil) {
 		sup.serviceSpec[name] = s
 	} else {
@@ -35,7 +35,7 @@ func (sup Supervisor) RegisterService(name string, s *ServiceSpec) {
 	
 }
 
-func (sup Supervisor) UnregisterService(name string) bool {
+func (sup *Supervisor) UnregisterService(name string) bool {
 	// check if the key exists
 	if _, exists := sup.serviceSpec[name]; !exists {
 		return false // return false if it didn't
@@ -44,7 +44,7 @@ func (sup Supervisor) UnregisterService(name string) bool {
 	return true
 }
 
-func (sup Supervisor) Start() bool {
+func (sup *Supervisor) Start() bool {
 	return sup.doForServices(func(s *ServiceSpec) bool {
 	        ch, result := s.service.Start()
 		s.ping = ch
@@ -52,14 +52,14 @@ func (sup Supervisor) Start() bool {
 	}) 
 }
 
-func (sup Supervisor) Stop() bool {
+func (sup *Supervisor) Stop() bool {
 	return sup.doForServices(func(s *ServiceSpec) bool {
 		s.service.Stop()
 		return true
 	}) 
 }
 
-func (sup Supervisor) doForServices(f func (s *ServiceSpec) bool) bool {
+func (sup *Supervisor) doForServices(f func (s *ServiceSpec) bool) bool {
 	result := true
 	for _, s := range sup.serviceSpec {
 		result = result && f(s)
