@@ -19,7 +19,8 @@ func (f FakeService) Stop() {
 }
 
 func TestServiceInterface(t *testing.T) {
-	spec := ServiceSpec{service: FakeService{}}
+	spec := ServiceSpec{service: FakeService{},
+	                    restartPolicy: NEVER}
 	_ = spec.service.(Service)
 }	
 
@@ -51,4 +52,16 @@ func TestUnregisterServiceSpec(t *testing.T) {
 	if _, ok := list[specName]; ok {
 		t.Error("Failed to unregister spec -- spec still there")
 	}
+}
+
+func TestRegisterServiceSpecOnStartedSupervisor(t *testing.T) {
+	sup := newSupervisor()
+	specName := "foo"
+	sup.started = true
+	defer func() {
+		if x := recover(); x == nil {
+			t.Error("Failed to panic when registering after started")
+		}
+	}()
+	helperRegisterServiceSpecTests(specName, sup, t)
 }
