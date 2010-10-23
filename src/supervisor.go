@@ -1,10 +1,15 @@
 package supervisor
 
-import "log"
+import (
+	"log"
+	. "sync"
+)
 
 type Supervisor struct {
 	serviceSpec map [string] *ServiceSpec
+	stopSignLock Mutex
 	stopSign bool
+	startedLock Mutex
 	started bool
 }
 
@@ -66,9 +71,16 @@ func serviceStarter(s *ServiceSpec) bool {
 	return result
 }
 
+func (sup *Supervisor) SetStarted(b bool) {
+	sup.startedLock.Lock()
+	sup.started = b
+	sup.startedLock.Unlock()
+}
+
 func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 	result := sup.doForServices(serviceStarter)
-	sup.started = true
+	sup.SetStarted(true)
+	sup.SetStopSign(false)
 	if !result {
 		return nil, false
 	}
@@ -115,12 +127,18 @@ func (sup *Supervisor) Loop(ch chan bool) {
 			break // time to stop
 		}
 	}
-	sup.started = false
+	sup.SetStarted(false)
 	close(ch)
 }
 
-func (sup *Supervisor) Stop() bool {
+func (sup *Supervisor) SetStopSign(b bool) {
+	sup.stopSignLock.Lock()
 	sup.stopSign = true
+	sup.stopSignLock.Unlock()
+}
+
+func (sup *Supervisor) Stop() bool {
+	sup.SetStopSign(true)
 	return sup.doForServices(func(s *ServiceSpec) bool {
 		s.service.Stop()
 		return true

@@ -57,11 +57,13 @@ func TestUnregisterServiceSpec(t *testing.T) {
 func TestRegisterServiceSpecOnStartedSupervisor(t *testing.T) {
 	sup := newSupervisor()
 	specName := "foo"
-	sup.started = true
+	sup.Start()
 	defer func() {
 		if x := recover(); x == nil {
 			t.Error("Failed to panic when registering after started")
 		}
 	}()
 	helperRegisterServiceSpecTests(specName, sup, t)
+	sup.Stop()
 }
+
