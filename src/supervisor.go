@@ -5,8 +5,10 @@ type Supervisor struct {
 }
 
 type Service interface {
-	Start() bool // returns true when successfull
-	Stop()  bool // return true when successfull
+	// returns true when successfull
+	// and a ping channel to check for life
+	Start() (chan bool, bool)
+	Stop() // return true when successfull
 }
 
 func (sup Supervisor) RegisterService(name string, s Service) {
@@ -23,12 +25,16 @@ func (sup Supervisor) UnregisterService(name string) bool {
 
 func (sup Supervisor) Start() bool {
 	return sup.doForServices(func(s Service) bool {
-	        return s.Start() }) 
+	        _, result := s.Start() // TODO(jwall): store the channel
+		return result
+	}) 
 }
 
 func (sup Supervisor) Stop() bool {
 	return sup.doForServices(func(s Service) bool {
-		return s.Stop() }) 
+		s.Stop()
+		return true
+	}) 
 }
 
 func (sup Supervisor) doForServices(f func (s Service) bool) bool {
