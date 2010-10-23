@@ -11,15 +11,28 @@ type Service interface {
 	Stop() // return true when successfull
 }
 
+type Policy int
+
+const (
+	ALWAYS = iota
+	NEVER
+)
+
+type ServiceSpec struct {
+	service Service
+	restartPolicy Policy
+}
+
 func (sup Supervisor) RegisterService(name string, s Service) {
 	sup.serviceSpec[name] = s
 }
 
 func (sup Supervisor) UnregisterService(name string) bool {
-	if sup.serviceSpec[name] == nil {
-		return false
+	// check if the key exists
+	if _, exists := sup.serviceSpec[name]; !exists {
+		return false // return false if it didn't
 	}
-	sup.serviceSpec[name] = nil
+	sup.serviceSpec[name] = nil, false // delete the key
 	return true
 }
 
