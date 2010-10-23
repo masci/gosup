@@ -93,21 +93,30 @@ func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 }
 
 func (sup *Supervisor) Loop(ch chan bool) {
+	defer close(ch)
+	defer sup.SetStarted(false)
+
 	for true {
 		result := sup.doForServices(func(s *ServiceSpec) bool {
 			// check for service aliveness
 			restart := false
 			ch := s.ping
+			log.Printf("the ping channel is: %s", s.ping)
 			if ch == nil || closed(ch) {
 				restart = true
 			} else {
 				ch<- true // send a ping
-				ok := <-ch // listen for response
-				if !ok {
+				healthy, ok := <-ch // listen for response
+				if ok && !healthy {
 					restart = true
+				} else if !ok {
+					restart = true
+			        } else {
+					restart = false
 				}
 			}
 			// if restart is needed follow restart policy
+			log.Printf("the restart policy is: %s", s.restartPolicy)
 			if restart {
 				switch s.restartPolicy {
 					case ALWAYS:
@@ -127,8 +136,6 @@ func (sup *Supervisor) Loop(ch chan bool) {
 			break // time to stop
 		}
 	}
-	sup.SetStarted(false)
-	close(ch)
 }
 
 func (sup *Supervisor) SetStopSign(b bool) {

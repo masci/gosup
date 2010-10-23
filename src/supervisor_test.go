@@ -1,18 +1,13 @@
 package supervisor
 
 import "testing"
+import "time"
 
 type FakeService struct {}
 
 func (f FakeService) Start() (chan bool, bool) {
 	ch := make(chan bool)
-	go f.Loop(ch)
 	return ch, true
-}
-
-func (f FakeService) Loop(chan bool) {
-	for true {
-	}
 }
 
 func (f FakeService) Stop() {
@@ -25,8 +20,12 @@ func TestServiceInterface(t *testing.T) {
 }	
 
 func helperRegisterServiceSpecTests(name string, sup *Supervisor, t *testing.T) *ServiceSpec {
-	spec := ServiceSpec{service: FakeService{}}
+	return helperRegisterServiceTests(name, sup, FakeService{}, t)
+}
+
+func helperRegisterServiceTests(name string, sup *Supervisor, s Service, t *testing.T) *ServiceSpec {
 	preListSize := len(sup.serviceSpec)
+	spec := ServiceSpec{service: s}
 	sup.RegisterService("foo", &spec)
 	list := sup.serviceSpec
 	if len(list) <= preListSize {
@@ -67,3 +66,30 @@ func TestRegisterServiceSpecOnStartedSupervisor(t *testing.T) {
 	sup.Stop()
 }
 
+// TODO(jwall): test for the loop functionality
+// TODO(jwall): supervisors should send a ping
+func TestPingChannelnilOrClosed(t *testing.T) {
+	sup := newSupervisor()
+	spec := ServiceSpec{service: FakeService{}}
+	spec.restartPolicy = DIEALSO
+	sup.RegisterService("foo", &spec)
+	sup.Start()
+	if closed(spec.ping) {
+		t.Error("service was not started")
+	}
+	spec.ping = nil
+	time.Sleep(1e9)
+	if !sup.stopSign || sup.started {
+		t.Error("Supervisor did not die when channel was nil")
+	}
+	sup.Start()
+	if closed(spec.ping) {
+		t.Error("service was not started")
+	}
+	close(spec.ping)
+	time.Sleep(1e9)
+	if !sup.stopSign || sup.started {
+		t.Error("Supervisor did not die when channel was closed")
+	}
+	defer sup.Stop()
+}
