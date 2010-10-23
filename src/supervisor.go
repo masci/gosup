@@ -3,7 +3,7 @@ package supervisor
 import "log"
 
 type Supervisor struct {
-	serviceSpec map [string] ServiceSpec
+	serviceSpec map [string] *ServiceSpec
 }
 
 type Service interface {
@@ -26,7 +26,7 @@ type ServiceSpec struct {
 	ping chan bool
 }
 
-func (sup Supervisor) RegisterService(name string, s ServiceSpec) {
+func (sup Supervisor) RegisterService(name string, s *ServiceSpec) {
 	if !(s.service == nil) {
 		sup.serviceSpec[name] = s
 	} else {
@@ -40,7 +40,7 @@ func (sup Supervisor) UnregisterService(name string) bool {
 	if _, exists := sup.serviceSpec[name]; !exists {
 		return false // return false if it didn't
 	}
-	sup.serviceSpec[name] = ServiceSpec{}, false // delete the key
+	sup.serviceSpec[name] = &ServiceSpec{}, false // delete the key
 	return true
 }
 
@@ -62,7 +62,7 @@ func (sup Supervisor) Stop() bool {
 func (sup Supervisor) doForServices(f func (s *ServiceSpec) bool) bool {
 	result := true
 	for _, s := range sup.serviceSpec {
-		result = result && f(&s)
+		result = result && f(s)
 	}
 	return result
 }
