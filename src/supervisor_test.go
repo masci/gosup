@@ -25,7 +25,7 @@ func TestServiceInterface(t *testing.T) {
 
 func TestRegisterServiceSpec(t *testing.T) {
 	spec := ServiceSpec{service: FakeService{}}
-	sup := Supervisor{serviceSpec: make(map[string] *ServiceSpec)}
+	sup := newSupervisor()
 	sup.RegisterService("foo", &spec)
 	list := sup.serviceSpec
 	if len(list) != 1 {

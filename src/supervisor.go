@@ -8,6 +8,12 @@ type Supervisor struct {
 	started bool
 }
 
+func newSupervisor() *Supervisor {
+	sup := new(Supervisor)
+	sup.serviceSpec = make(map[string] *ServiceSpec)
+	return sup
+}
+
 type Service interface {
 	// returns true when successfull
 	// and a ping channel to check for life
