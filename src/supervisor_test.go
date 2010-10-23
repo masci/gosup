@@ -23,29 +23,32 @@ func TestServiceInterface(t *testing.T) {
 	_ = spec.service.(Service)
 }	
 
-func helperRegisterServiceSpecTests(name string, t *testing.T) *Supervisor {
+func helperRegisterServiceSpecTests(name string, sup *Supervisor, t *testing.T) *ServiceSpec {
 	spec := ServiceSpec{service: FakeService{}}
-	sup := newSupervisor()
+	preListSize := len(sup.serviceSpec)
 	sup.RegisterService("foo", &spec)
 	list := sup.serviceSpec
-	if len(list) != 1 {
+	if len(list) <= preListSize {
 		t.Error("Failed to register spec -- list too short")
 	}
 	if spec2, ok := list["foo"]; !(ok && spec2 == &spec){
 		t.Error("Failed to register spec -- spec not the same")
 	}
-	return sup
+	return &spec
 }
 
 func TestRegisterServiceSpec(t *testing.T) {
-	helperRegisterServiceSpecTests("foo")
+	sup := newSupervisor()
+	helperRegisterServiceSpecTests("foo", sup, t)
 }
 
 func TestUnregisterServiceSpec(t *testing.T) {
+	sup := newSupervisor()
 	specName := "foo"
-	helperRegisterServiceSpecTests(specName)
+	helperRegisterServiceSpecTests(specName, sup, t)
 	sup.UnregisterService(specName)
-	if spec2, ok := list[specName]; (ok && spec2 == &spec){
+	list := sup.serviceSpec
+	if _, ok := list[specName]; ok {
 		t.Error("Failed to unregister spec -- spec still there")
 	}
 }
