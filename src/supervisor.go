@@ -85,7 +85,7 @@ func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 		return nil, false
 	}
 
-	ping := make(chan bool)	
+	ping := make(chan bool, 1)	
 
 	//run supervisor loop
 	go sup.Loop(ping)
@@ -97,6 +97,12 @@ func (sup *Supervisor) Loop(ch chan bool) {
 	defer sup.SetStarted(false)
 
 	for true {
+		// TODO(jwall): listen for ping requests and respond
+		ping, ok := <-ch
+		if ok && ping {
+			_ = ch <- true
+		}
+
 		result := sup.doForServices(func(s *ServiceSpec) bool {
 			// check for service aliveness
 			restart := false
@@ -111,9 +117,7 @@ func (sup *Supervisor) Loop(ch chan bool) {
 					restart = true
 				} else if !ok {
 					restart = true
-			        } else {
-					restart = false
-				}
+			        }
 			}
 			// if restart is needed follow restart policy
 			log.Printf("the restart policy is: %s", s.restartPolicy)

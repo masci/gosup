@@ -66,14 +66,16 @@ func TestRegisterServiceSpecOnStartedSupervisor(t *testing.T) {
 	sup.Stop()
 }
 
-// TODO(jwall): test for the loop functionality
-// TODO(jwall): supervisors should send a ping
+// TODO(jwall): tests for the loop functionality
+// TODO(jwall): test supervisors should send a ping
 func TestPingChannelnilOrClosed(t *testing.T) {
 	sup := newSupervisor()
 	spec := ServiceSpec{service: FakeService{}}
 	spec.restartPolicy = DIEALSO
 	sup.RegisterService("foo", &spec)
 	sup.Start()
+	defer sup.Stop()
+
 	if closed(spec.ping) {
 		t.Error("service was not started")
 	}
@@ -91,5 +93,16 @@ func TestPingChannelnilOrClosed(t *testing.T) {
 	if !sup.stopSign || sup.started {
 		t.Error("Supervisor did not die when channel was closed")
 	}
+}
+
+func TestSupervisorPings(t *testing.T) {
+	sup := newSupervisor()
+	helperRegisterServiceSpecTests("foo", sup, t)
+	ch, _ := sup.Start()
 	defer sup.Stop()
+	ch <- true
+	ok := <-ch
+	if !ok {
+		t.Error("Supervisor did not respond to ping")
+	}
 }
