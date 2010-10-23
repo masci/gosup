@@ -113,11 +113,9 @@ func (sup *Supervisor) Loop(ch chan bool) {
 			} else {
 				ch<- true // send a ping
 				healthy, ok := <-ch // listen for response
-				if ok && !healthy {
+				if !ok || (ok && !healthy) {
 					restart = true
-				} else if !ok {
-					restart = true
-			        }
+				}
 			}
 			// if restart is needed follow restart policy
 			log.Printf("the restart policy is: %s", s.restartPolicy)

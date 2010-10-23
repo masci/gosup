@@ -95,6 +95,27 @@ func TestPingChannelnilOrClosed(t *testing.T) {
 	}
 }
 
+func TestPingChannelReportsUnhealthy(t *testing.T) {
+	sup := newSupervisor()
+	spec := ServiceSpec{service: FakeService{}}
+	spec.restartPolicy = DIEALSO
+	sup.RegisterService("foo", &spec)
+	sup.Start()
+	defer sup.Stop()
+	
+	go func() {
+		_ = <-spec.ping
+		spec.ping <- false // send an unhealthy response
+	}()
+	if closed(spec.ping) {
+		t.Error("service was not started")
+	}
+	time.Sleep(1e9)
+	if !sup.stopSign || sup.started {
+		t.Error("Supervisor did not die when channel reported unhealthy")
+	}
+}
+
 func TestSupervisorPings(t *testing.T) {
 	sup := newSupervisor()
 	helperRegisterServiceSpecTests("foo", sup, t)
