@@ -5,6 +5,7 @@ import "log"
 type Supervisor struct {
 	serviceSpec map [string] *ServiceSpec
 	stopSign bool
+	started bool
 }
 
 type Service interface {
@@ -29,6 +30,9 @@ type ServiceSpec struct {
 }
 
 func (sup *Supervisor) RegisterService(name string, s *ServiceSpec) {
+	if sup.started {
+		log.Panic("Attempt to register service while supervisor started")
+	}
 	if !(s.service == nil) {
 		sup.serviceSpec[name] = s
 	} else {
@@ -38,6 +42,9 @@ func (sup *Supervisor) RegisterService(name string, s *ServiceSpec) {
 }
 
 func (sup *Supervisor) UnregisterService(name string) bool {
+	if sup.started {
+		log.Panic("Attempt to unregister service while supervisor started")
+	}
 	// check if the key exists
 	if _, exists := sup.serviceSpec[name]; !exists {
 		return false // return false if it didn't
@@ -54,7 +61,7 @@ func serviceStarter(s *ServiceSpec) bool {
 
 func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 	result := sup.doForServices(serviceStarter)
-
+	sup.started = true
 	if !result {
 		return nil, false
 	}
@@ -101,6 +108,7 @@ func (sup *Supervisor) Loop(ch chan bool) {
 			break // time to stop
 		}
 	}
+	sup.started = false
 	close(ch)
 }
 
