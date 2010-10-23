@@ -27,6 +27,7 @@ type ServiceSpec struct {
 	service Service
 	restartPolicy Policy
 	ping chan bool
+	// TODO(jwall): service spec should have a count field as well?
 }
 
 func (sup *Supervisor) RegisterService(name string, s *ServiceSpec) {
@@ -36,7 +37,7 @@ func (sup *Supervisor) RegisterService(name string, s *ServiceSpec) {
 	if !(s.service == nil) {
 		sup.serviceSpec[name] = s
 	} else {
-		log.Panicf("No Service is service spec: %s", s)
+		log.Panicf("No Service in service spec: %s", s)
 	}
 	
 }
