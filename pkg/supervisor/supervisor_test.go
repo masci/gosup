@@ -66,8 +66,6 @@ func TestRegisterServiceSpecOnStartedSupervisor(t *testing.T) {
 	sup.Stop()
 }
 
-// TODO(jwall): tests for the loop functionality
-// TODO(jwall): test supervisors should send a ping
 func TestPingChannelnilOrClosed(t *testing.T) {
 	sup := NewSupervisor()
 	spec := ServiceSpec{service: FakeService{}}
