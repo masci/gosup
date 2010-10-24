@@ -38,12 +38,12 @@ func helperRegisterServiceTests(name string, sup *Supervisor, s Service, t *test
 }
 
 func TestRegisterServiceSpec(t *testing.T) {
-	sup := newSupervisor()
+	sup := NewSupervisor()
 	helperRegisterServiceSpecTests("foo", sup, t)
 }
 
 func TestUnregisterServiceSpec(t *testing.T) {
-	sup := newSupervisor()
+	sup := NewSupervisor()
 	specName := "foo"
 	helperRegisterServiceSpecTests(specName, sup, t)
 	sup.UnregisterService(specName)
@@ -54,7 +54,7 @@ func TestUnregisterServiceSpec(t *testing.T) {
 }
 
 func TestRegisterServiceSpecOnStartedSupervisor(t *testing.T) {
-	sup := newSupervisor()
+	sup := NewSupervisor()
 	specName := "foo"
 	sup.Start()
 	defer func() {
@@ -69,7 +69,7 @@ func TestRegisterServiceSpecOnStartedSupervisor(t *testing.T) {
 // TODO(jwall): tests for the loop functionality
 // TODO(jwall): test supervisors should send a ping
 func TestPingChannelnilOrClosed(t *testing.T) {
-	sup := newSupervisor()
+	sup := NewSupervisor()
 	spec := ServiceSpec{service: FakeService{}}
 	spec.restartPolicy = DIEALSO
 	sup.RegisterService("foo", &spec)
@@ -96,7 +96,7 @@ func TestPingChannelnilOrClosed(t *testing.T) {
 }
 
 func TestPingChannelReportsUnhealthy(t *testing.T) {
-	sup := newSupervisor()
+	sup := NewSupervisor()
 	spec := ServiceSpec{service: FakeService{}}
 	spec.restartPolicy = DIEALSO
 	sup.RegisterService("foo", &spec)
@@ -117,7 +117,7 @@ func TestPingChannelReportsUnhealthy(t *testing.T) {
 }
 
 func TestSupervisorPings(t *testing.T) {
-	sup := newSupervisor()
+	sup := NewSupervisor()
 	helperRegisterServiceSpecTests("foo", sup, t)
 	ch, _ := sup.Start()
 	defer sup.Stop()

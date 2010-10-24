@@ -23,7 +23,7 @@ import (
 
 /*
  A supervisor in a supervision tree. Supervisors should be constructed using
- newSupervisor() so that default values are filled in correctly.
+ NewSupervisor() so that default values are filled in correctly.
 
  Supervisors implement the Service interface so thay can be children of other
  supervisors forming a tree.
@@ -41,7 +41,7 @@ type Supervisor struct {
 
  Fills in the default values for a supervisor it.
  */
-func newSupervisor() *Supervisor {
+func NewSupervisor() *Supervisor {
 	sup := new(Supervisor)
 	sup.serviceSpec = make(map[string] *ServiceSpec)
 	return sup
