@@ -104,7 +104,7 @@ func TestPingChannelReportsUnhealthy(t *testing.T) {
 	defer sup.Stop()
 	
 	go func() {
-		_ = <-spec.ping
+		_ = <-spec.ping // listen for ping request
 		spec.ping <- false // send an unhealthy response
 	}()
 	if closed(spec.ping) {
