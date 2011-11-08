@@ -2,7 +2,7 @@
  Copyright 2010 Jeremy Wall (jeremy@marzhillstudios.com)
  Use of this source code is governed by the Artistic License 2.0.
  That License is included in the LICENSE file.
- 
+
  The supervisor package implements an elementary supervision tree
  for goroutines ala erlangs supervision trees.
 
@@ -176,10 +176,13 @@ func (sup *Supervisor) Loop(ch chan bool) {
 	defer sup.SetStarted(false)
 
 	for true {
-		// TODO(jwall): listen for ping requests and respond
-		ping, ok := <-ch
-		if ok && ping {
-			_ = ch <- true
+		select {
+		case ping := <-ch:
+			if ping {
+				ch <- true
+			}
+		default:
+			// noop
 		}
 
 		result := sup.doForServices(func(s *ServiceSpec) bool {
@@ -187,10 +190,10 @@ func (sup *Supervisor) Loop(ch chan bool) {
 			restart := false
 			ch := s.ping
 			log.Printf("the ping channel is: %s", s.ping)
-			if ch == nil || closed(ch) {
+			if ch == nil {
 				restart = true
 			} else {
-				ch<- true // send a ping
+				ch <- true // send a ping
 				healthy, ok := <-ch // listen for response
 				if !ok || (ok && !healthy) {
 					restart = true
