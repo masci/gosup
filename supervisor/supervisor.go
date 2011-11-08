@@ -164,7 +164,7 @@ func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 		return nil, false
 	}
 
-	ping := make(chan bool, 1)	
+	ping := make(chan bool, 1)
 
 	//run supervisor loop
 	go sup.Loop(ping)
@@ -193,10 +193,18 @@ func (sup *Supervisor) Loop(ch chan bool) {
 			if ch == nil {
 				restart = true
 			} else {
-				ch <- true // send a ping
-				healthy, ok := <-ch // listen for response
-				if !ok || (ok && !healthy) {
-					restart = true
+				// first check to see if the channel is open
+				select {
+				case _, open := <-ch:
+					if !open {
+						restart = true
+					}
+				default:
+					ch <- true // send a ping
+					healthy, ok := <-ch // listen for response
+					if !ok || (ok && !healthy) {
+						restart = true
+					}
 				}
 			}
 			// if restart is needed follow restart policy
@@ -234,7 +242,7 @@ func (sup *Supervisor) Stop() bool {
 	return sup.doForServices(func(s *ServiceSpec) bool {
 		s.service.Stop()
 		return true
-	}) 
+	})
 }
 
 func (sup *Supervisor) doForServices(f func (s *ServiceSpec) bool) bool {

@@ -74,18 +74,12 @@ func TestPingChannelnilOrClosed(t *testing.T) {
 	sup.Start()
 	defer sup.Stop()
 
-	if closed(spec.ping) {
-		t.Error("service was not started")
-	}
 	spec.ping = nil
 	time.Sleep(1e9)
 	if !sup.stopSign || sup.started {
 		t.Error("Supervisor did not die when channel was nil")
 	}
 	sup.Start()
-	if closed(spec.ping) {
-		t.Error("service was not started")
-	}
 	close(spec.ping)
 	time.Sleep(1e9)
 	if !sup.stopSign || sup.started {
@@ -100,14 +94,12 @@ func TestPingChannelReportsUnhealthy(t *testing.T) {
 	sup.RegisterService("foo", &spec)
 	sup.Start()
 	defer sup.Stop()
-	
+
 	go func() {
 		_ = <-spec.ping // listen for ping request
 		spec.ping <- false // send an unhealthy response
 	}()
-	if closed(spec.ping) {
-		t.Error("service was not started")
-	}
+
 	time.Sleep(1e9)
 	if !sup.stopSign || sup.started {
 		t.Error("Supervisor did not die when channel reported unhealthy")
