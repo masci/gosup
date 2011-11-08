@@ -1,8 +1,4 @@
 /*
- Copyright 2010 Jeremy Wall (jeremy@marzhillstudios.com)
- Use of this source code is governed by the Artistic License 2.0.
- That License is included in the LICENSE file.
-
  The supervisor package implements an elementary supervision tree
  for goroutines ala erlangs supervision trees.
 
@@ -142,7 +138,7 @@ func serviceStarter(s *ServiceSpec) bool {
 	return result
 }
 
-func (sup *Supervisor) SetStarted(b bool) {
+func (sup *Supervisor) setStarted(b bool) {
 	sup.startedLock.Lock()
 	sup.started = b
 	sup.startedLock.Unlock()
@@ -158,8 +154,8 @@ func (sup *Supervisor) SetStarted(b bool) {
  */
 func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 	result := sup.doForServices(serviceStarter)
-	sup.SetStarted(true)
-	sup.SetStopSign(false)
+	sup.setStarted(true)
+	sup.setStopSign(false)
 	if !result {
 		return nil, false
 	}
@@ -173,7 +169,7 @@ func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 
 func (sup *Supervisor) Loop(ch chan bool) {
 	defer close(ch)
-	defer sup.SetStarted(false)
+	defer sup.setStarted(false)
 
 	for true {
 		select {
@@ -230,7 +226,7 @@ func (sup *Supervisor) Loop(ch chan bool) {
 	}
 }
 
-func (sup *Supervisor) SetStopSign(b bool) {
+func (sup *Supervisor) setStopSign(b bool) {
 	sup.stopSignLock.Lock()
 	sup.stopSign = true
 	sup.stopSignLock.Unlock()
@@ -238,7 +234,7 @@ func (sup *Supervisor) SetStopSign(b bool) {
 
 // Stop a supervisor
 func (sup *Supervisor) Stop() bool {
-	sup.SetStopSign(true)
+	sup.setStopSign(true)
 	return sup.doForServices(func(s *ServiceSpec) bool {
 		s.service.Stop()
 		return true
@@ -252,3 +248,6 @@ func (sup *Supervisor) doForServices(f func (s *ServiceSpec) bool) bool {
 	}
 	return result
 }
+// Copyright 2010 Jeremy Wall (jeremy@marzhillstudios.com)
+// Use of this source code is governed by the Artistic License 2.0.
+// That License is included in the LICENSE file.
