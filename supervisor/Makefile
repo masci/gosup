@@ -3,6 +3,7 @@ include $(GOROOT)/src/Make.inc
 
 TARG=supervisor
 GOFILES=\
+	service.go\
 	supervisor.go\
 
 include $(GOROOT)/src/Make.pkg

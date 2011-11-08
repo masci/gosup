@@ -24,12 +24,29 @@ import (
  Supervisors implement the Service interface so thay can be children of other
  supervisors forming a tree.
  */
-type Supervisor struct {
-	serviceSpec map [string] *ServiceSpec
+
+type startStopLock struct {
 	stopSignLock Mutex
 	stopSign bool
 	startedLock Mutex
 	started bool
+}
+
+func (l *startStopLock) setStarted(b bool) {
+	l.startedLock.Lock()
+	l.started = b
+	l.startedLock.Unlock()
+}
+
+func (l *startStopLock) setStopSign(b bool) {
+	l.stopSignLock.Lock()
+	l.stopSign = true
+	l.stopSignLock.Unlock()
+}
+
+type Supervisor struct {
+	serviceSpec map [string] *ServiceSpec
+	*startStopLock
 }
 
 /*
@@ -39,6 +56,7 @@ type Supervisor struct {
  */
 func NewSupervisor() *Supervisor {
 	sup := new(Supervisor)
+	sup.startStopLock = new(startStopLock)
 	sup.serviceSpec = make(map[string] *ServiceSpec)
 	return sup
 }
@@ -138,12 +156,6 @@ func serviceStarter(s *ServiceSpec) bool {
 	return result
 }
 
-func (sup *Supervisor) setStarted(b bool) {
-	sup.startedLock.Lock()
-	sup.started = b
-	sup.startedLock.Unlock()
-}
-
 /*
  Start a supervisor.
 
@@ -167,6 +179,7 @@ func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 	return ping, true
 }
 
+// TODO(jwall): implement supervisors as a Generic Service
 func (sup *Supervisor) loop(ch chan bool) {
 	defer close(ch)
 	defer sup.setStarted(false)
@@ -224,12 +237,6 @@ func (sup *Supervisor) loop(ch chan bool) {
 			break // time to stop
 		}
 	}
-}
-
-func (sup *Supervisor) setStopSign(b bool) {
-	sup.stopSignLock.Lock()
-	sup.stopSign = true
-	sup.stopSignLock.Unlock()
 }
 
 // Stop a supervisor
