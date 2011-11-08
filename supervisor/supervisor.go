@@ -163,11 +163,11 @@ func (sup *Supervisor) Start() (chan bool, bool) { // A supervisor is a service
 	ping := make(chan bool, 1)
 
 	//run supervisor loop
-	go sup.Loop(ping)
+	go sup.loop(ping)
 	return ping, true
 }
 
-func (sup *Supervisor) Loop(ch chan bool) {
+func (sup *Supervisor) loop(ch chan bool) {
 	defer close(ch)
 	defer sup.setStarted(false)
 
