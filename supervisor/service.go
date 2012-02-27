@@ -19,7 +19,7 @@ func NewService(f LoopFun) *GenericService {
 func (s *GenericService) Start() (chan bool, bool) {
 	s.setStarted(true)
 	s.setStopSign(false)
-	ch := make(chan bool, 1)
+	ch := make(chan bool)
 	go s.loop(ch, s.run)
 	return ch, true
 }

@@ -40,7 +40,7 @@ func (l *startStopLock) setStarted(b bool) {
 
 func (l *startStopLock) setStopSign(b bool) {
 	l.stopSignLock.Lock()
-	l.stopSign = true
+	l.stopSign = b
 	l.stopSignLock.Unlock()
 }
 
@@ -145,7 +145,7 @@ func (sup *Supervisor) UnregisterService(name string) bool {
 	if _, exists := sup.serviceSpec[name]; !exists {
 		return false // return false if it didn't
 	}
-	sup.serviceSpec[name] = &ServiceSpec{}, false // delete the key
+	delete(sup.serviceSpec, name) // delete the key
 	return true
 }
 
